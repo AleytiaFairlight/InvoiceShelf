@@ -49,6 +49,20 @@ return [
         'auth_token' => env('CRON_JOB_AUTH_TOKEN'),
     ],
 
+    /*
+     * Sign-in with Authentik over OpenID Connect. It is on once the base URL,
+     * client ID and client secret are all set; docs/authentik-sso.md explains
+     * the Authentik side. The redirect URI defaults to /auth/authentik/callback
+     * on whatever host the login page was opened on.
+     */
+    'authentik' => [
+        'base_url' => env('AUTHENTIK_BASE_URL'),
+        'client_id' => env('AUTHENTIK_CLIENT_ID'),
+        'client_secret' => env('AUTHENTIK_CLIENT_SECRET'),
+        'redirect' => env('AUTHENTIK_REDIRECT_URI', '/auth/authentik/callback'),
+        'button_label' => env('AUTHENTIK_BUTTON_LABEL', 'Authentik'),
+    ],
+
     'ses' => [
         'key' => env('SES_KEY'),
         'secret' => env('SES_SECRET'),

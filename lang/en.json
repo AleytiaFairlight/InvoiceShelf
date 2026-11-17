@@ -708,7 +708,9 @@
     "password_reset_successfully": "Password Reset Successfully",
     "enter_email": "Enter email",
     "enter_password": "Enter Password",
-    "retype_password": "Retype Password"
+    "retype_password": "Retype Password",
+    "authentik_failed": "Signing in with {provider} did not work. Please try again.",
+    "authentik_no_account": "Your {provider} account does not match a user here. Ask an administrator to add a user with your email address."
   },
   "modules": {
     "buy_now": "Buy Now",

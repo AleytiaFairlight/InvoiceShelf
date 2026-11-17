@@ -63,6 +63,11 @@
         window.copyright_text = "{{$copyright_text}}"
 
         @endif
+        @if(isset($authentik_login))
+
+        window.authentik_login = @json($authentik_login)
+
+        @endif
 
         @if(config('app.env') === 'demo')
             window.demo_mode = true

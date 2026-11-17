@@ -22,11 +22,14 @@ use App\Policies\UserPolicy;
 use App\Space\InstallUtils;
 use Gate;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 use Silber\Bouncer\Database\Models as BouncerModels;
 use Silber\Bouncer\Database\Role;
+use SocialiteProviders\Authentik\Provider as AuthentikProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 use View;
 
 class AppServiceProvider extends ServiceProvider
@@ -65,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->bootAuth();
         $this->bootBroadcast();
+        $this->bootAuthentik();
 
         // In demo mode, prevent all outgoing emails and notifications
         if (config('app.env') === 'demo') {
@@ -156,5 +160,16 @@ class AppServiceProvider extends ServiceProvider
     public function bootBroadcast()
     {
         Broadcast::routes(['middleware' => 'api.auth']);
+    }
+
+    /**
+     * Adds Authentik to Socialite, for sign-in with Authentik
+     * (AuthentikController).
+     */
+    public function bootAuthentik(): void
+    {
+        Event::listen(function (SocialiteWasCalled $event): void {
+            $event->extendSocialite('authentik', AuthentikProvider::class);
+        });
     }
 }

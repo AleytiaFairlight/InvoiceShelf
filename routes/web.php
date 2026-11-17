@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\V1\Admin\Auth\AuthentikController;
 use App\Http\Controllers\V1\Admin\Auth\LoginController;
 use App\Http\Controllers\V1\Admin\Expense\ShowReceiptController;
 use App\Http\Controllers\V1\Admin\Report\CustomerSalesReportController;
@@ -38,6 +39,14 @@ Route::post('auth/logout', function () {
 
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+});
+
+// Sign-in with Authentik (off until configured, see AuthentikController)
+// ----------------------------------------------
+
+Route::middleware(['guest', 'throttle:30,1,authentik'])->prefix('auth/authentik')->group(function () {
+    Route::get('redirect', [AuthentikController::class, 'redirect'])->name('authentik.redirect');
+    Route::get('callback', [AuthentikController::class, 'callback'])->name('authentik.callback');
 });
 
 // Customer auth

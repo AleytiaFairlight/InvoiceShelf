@@ -52,6 +52,21 @@
     <BaseButton :loading="isLoading" type="submit">
       {{ $t('login.login') }}
     </BaseButton>
+
+    <div v-if="authentikLogin" class="mt-8">
+      <p class="mb-3 text-sm text-gray-500">
+        {{ $t('login.or_signIn_with') }}
+      </p>
+      <BaseButton tag="a" :href="authentikLogin.url" variant="white">
+        <template #left="slotProps">
+          <BaseIcon name="KeyIcon" :class="slotProps.class" />
+        </template>
+        {{ authentikLogin.label }}
+      </BaseButton>
+      <p v-if="authentikError" class="mt-3 text-sm text-red-600" role="alert">
+        {{ authentikError }}
+      </p>
+    </div>
   </form>
 </template>
 
@@ -93,6 +108,27 @@ const getInputType = computed(() => {
     return 'text'
   }
   return 'password'
+})
+
+// Sign-in with Authentik, when the server has it set up (app/Support/AuthentikLogin.php)
+const authentikLogin = window.authentik_login
+const authentikErrors = {
+  failed: 'login.authentik_failed',
+  no_account: 'login.authentik_no_account',
+}
+const authentikError = ref(null)
+
+onMounted(() => {
+  const error = authentikErrors[authentikLogin?.error]
+
+  if (error) {
+    authentikError.value = t(error, { provider: authentikLogin.label })
+  }
+
+  // The error belongs to the sign-in that just came back, not to later visits
+  if (authentikLogin) {
+    authentikLogin.error = null
+  }
 })
 
 async function onSubmit() {
