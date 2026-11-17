@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\V1\Customer\LegacyEmailLinkController;
+use App\Models\EmailLog;
 use App\Models\Setting;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Remembers the newest email that may have gone out with an old link, so that
@@ -20,7 +20,7 @@ return new class extends Migration
     {
         Setting::setSetting(
             LegacyEmailLinkController::CUTOFF_SETTING,
-            (int) DB::table('email_logs')->max('id')
+            (int) EmailLog::query()->max('id')
         );
     }
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -86,38 +86,38 @@
 
     @switch($state)
         @case('offer')
-            <h1>This link has been replaced</h1>
-            <p>For your security, links in emails sent before a recent update no longer open documents directly.</p>
-            <p>We can email a new link to the address this message was sent to.</p>
+            <h1>{{ __('This link has been replaced') }}</h1>
+            <p>{{ __('For your security, links in emails sent before a recent update no longer open documents directly.') }}</p>
+            <p>{{ __('We can email a new link to the address this message was sent to.') }}</p>
             <form method="POST">
                 @csrf
-                <button type="submit">Email me a new link</button>
+                <button type="submit">{{ __('Email me a new link') }}</button>
             </form>
             @break
 
         @case('sent')
-            <h1>Check your inbox</h1>
-            <p>A new link is on its way to the address this message was sent to. It can take a few minutes to arrive.</p>
+            <h1>{{ __('Check your inbox') }}</h1>
+            <p>{{ __('A new link is on its way to the address this message was sent to. It can take a few minutes to arrive.') }}</p>
             @break
 
         @case('expired')
-            <h1>This link has expired</h1>
-            <p>Please contact {{ $company->name }} for a new copy.</p>
+            <h1>{{ __('This link has expired') }}</h1>
+            <p>{{ __('Please contact :company for a new copy.', ['company' => $company->name]) }}</p>
             @break
 
         @case('limited')
-            <h1>Too many requests</h1>
-            <p>Please try again later, or contact {{ $company->name }}.</p>
+            <h1>{{ __('Too many requests') }}</h1>
+            <p>{{ __('Please try again later, or contact :company.', ['company' => $company->name]) }}</p>
             @break
 
         @case('unavailable')
-            <h1>We can't send a new link for this message</h1>
-            <p>Please contact {{ $company->name }} for a new copy.</p>
+            <h1>{{ __("We can't send a new link for this message") }}</h1>
+            <p>{{ __('Please contact :company for a new copy.', ['company' => $company->name]) }}</p>
             @break
 
         @default
-            <h1>We couldn't send a new link</h1>
-            <p>Please try again later, or contact {{ $company->name }}.</p>
+            <h1>{{ __("We couldn't send a new link") }}</h1>
+            <p>{{ __('Please try again later, or contact :company.', ['company' => $company->name]) }}</p>
     @endswitch
 </main>
 </body>

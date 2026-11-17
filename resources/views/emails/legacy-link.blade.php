@@ -7,19 +7,19 @@
     @endslot
 
 {{-- Body: Markdown, so these lines must not be indented --}}
-Hello,
+{{ __('Hello,') }}
 
-You asked for a new link to {{ $type }} **{{ $number }}** from {{ $companyName }}. The link in the earlier email no longer works, because links in emails sent before a security update were replaced.
+{{ $intro }}
 
 @component('mail::button', ['url' => $url])
-View {{ $type }}
+{{ $button }}
 @endcomponent
 
 @if($expiresOn)
-This link works until {{ $expiresOn }}.
+{{ __('This link works until :date.', ['date' => $expiresOn]) }}
 @endif
 
-If you did not ask for this, you can ignore this email.
+{{ __('If you did not ask for this, you can ignore this email.') }}
 
     {{-- Footer --}}
     @slot('footer')

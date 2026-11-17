@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Customer;
 use App\Facades\Hashids;
 use App\Http\Controllers\Controller;
 use App\Mail\LegacyEmailLinkMail;
+use App\Models\CompanySetting;
 use App\Models\EmailLog;
 use App\Models\Estimate;
 use App\Models\Invoice;
@@ -13,6 +14,7 @@ use App\Models\Setting;
 use App\Support\PublicToken;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Throwable;
@@ -75,29 +77,11 @@ class LegacyEmailLinkController extends Controller
             return $this->page($log, 'unavailable', 422);
         }
 
-        $keys = [
-            'email' => 'legacy-email-link:email:'.$log->id,
-            'visitor' => 'legacy-email-link:visitor:'.$request->ip(),
-            'total' => 'legacy-email-link:total',
-        ];
-
-        foreach ($keys as $limit => $key) {
-            if (RateLimiter::tooManyAttempts($key, self::LIMITS[$limit][0])) {
-                return $this->page($log, 'limited', 429);
-            }
+        if (! $this->allowResend($log, $request)) {
+            return $this->page($log, 'limited', 429);
         }
 
-        foreach ($keys as $limit => $key) {
-            RateLimiter::hit($key, self::LIMITS[$limit][1]);
-        }
-
-        // The upgrade re-issued every token; this only covers a log it missed.
-        if (strlen((string) $log->token) !== PublicToken::LENGTH) {
-            $log->token = PublicToken::make();
-            $log->save();
-        }
-
-        $url = route(self::DOCUMENTS[$document][1], ['email_log' => $log->token]);
+        $url = route(self::DOCUMENTS[$document][1], ['email_log' => $this->currentToken($log)]);
 
         try {
             Mail::to($recipients)->send(new LegacyEmailLinkMail($log, $url));
@@ -124,7 +108,7 @@ class LegacyEmailLinkController extends Controller
         abort_unless(count($ids) === 1, 404);
         abort_unless($ids[0] <= (int) Setting::getSetting(self::CUTOFF_SETTING), 404);
 
-        $log = EmailLog::find($ids[0]);
+        $log = EmailLog::query()->find($ids[0]);
         [$class] = self::DOCUMENTS[$document];
 
         abort_unless($log && $log->mailable instanceof $class, 404);
@@ -147,12 +131,59 @@ class LegacyEmailLinkController extends Controller
         ));
     }
 
+    /**
+     * Count a resend against every limit, unless one of them is used up.
+     */
+    private function allowResend(EmailLog $log, Request $request): bool
+    {
+        $keys = [
+            'email' => 'legacy-email-link:email:'.$log->id,
+            'visitor' => 'legacy-email-link:visitor:'.$request->ip(),
+            'total' => 'legacy-email-link:total',
+        ];
+
+        foreach ($keys as $limit => $key) {
+            if (RateLimiter::tooManyAttempts($key, self::LIMITS[$limit][0])) {
+                return false;
+            }
+        }
+
+        foreach ($keys as $limit => $key) {
+            RateLimiter::hit($key, self::LIMITS[$limit][1]);
+        }
+
+        return true;
+    }
+
+    /**
+     * The token of the email's current link.
+     *
+     * The upgrade to 2.4.4 re-issued every token, so this only covers an
+     * email it missed.
+     */
+    private function currentToken(EmailLog $log): string
+    {
+        if (strlen((string) $log->token) !== PublicToken::LENGTH) {
+            $log->token = PublicToken::make();
+            $log->save();
+        }
+
+        return $log->token;
+    }
+
+    /**
+     * The page for an old link, in the company's language.
+     */
     private function page(EmailLog $log, string $state, int $status = 200): Response
     {
+        $company = $log->mailable->company;
+
+        App::setLocale(CompanySetting::getSetting('language', $company->id) ?: config('app.locale'));
+
         return response()
             ->view('legacy-email-link', [
                 'state' => $state,
-                'company' => $log->mailable->company,
+                'company' => $company,
             ], $status)
             ->header('X-Robots-Tag', 'noindex, nofollow')
             ->header('Referrer-Policy', 'no-referrer');

@@ -204,6 +204,7 @@ test('new links for one email are limited', function () {
 test('the email names the document and the last day its link works', function () {
     $invoice = Invoice::factory()->create();
     expireLinksAfter(7, $invoice->company_id);
+    CompanySetting::setSettings(['carbon_date_format' => 'd.m.Y'], $invoice->company_id);
     $log = emailSentBeforeUpgrade($invoice, ['created_at' => now()->subDays(2)]);
     $url = route('invoice', ['email_log' => $log->token]);
 
@@ -211,7 +212,32 @@ test('the email names the document and the last day its link works', function ()
         ->assertHasSubject("New link to invoice {$invoice->invoice_number} from {$invoice->company->name}")
         ->assertSeeInHtml($url)
         ->assertSeeInHtml($invoice->invoice_number)
-        ->assertSeeInHtml(now()->addDays(5)->toFormattedDateString());
+        ->assertSeeInHtml('This link works until '.now()->addDays(5)->format('d.m.Y').'.');
+});
+
+test('the page uses the company language, and English where it has no translation yet', function () {
+    $invoice = Invoice::factory()->create();
+    CompanySetting::setSettings(['language' => 'de'], $invoice->company_id);
+    $log = emailSentBeforeUpgrade($invoice);
+
+    get(oldEmailLink($log))
+        ->assertOk()
+        ->assertSee('<html lang="de">', false)
+        ->assertSee('Email me a new link');
+});
+
+test('the email uses the company language, and English where it has no translation yet', function () {
+    $invoice = Invoice::factory()->create();
+    CompanySetting::setSettings(['language' => 'de'], $invoice->company_id);
+    $log = emailSentBeforeUpgrade($invoice);
+    app()->setLocale('en');
+
+    $germanButton = __('mail_view_invoice', [], 'de');
+    expect($germanButton)->not->toBe(__('mail_view_invoice', [], 'en'));
+
+    (new LegacyEmailLinkMail($log, route('invoice', ['email_log' => $log->token])))
+        ->assertSeeInHtml($germanButton)
+        ->assertSeeInHtml('You asked for a new link to invoice');
 });
 
 test('the upgrade records the newest email as the last one with an old link', function () {
