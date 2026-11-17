@@ -54,15 +54,14 @@
         {{ $t('login.login') }}
       </BaseButton>
 
+      <!-- Styled like the Login button, in white -->
       <BaseButton
         v-if="authentikLogin"
         tag="a"
         :href="authentikLogin.url"
         variant="white"
+        class="!border-transparent shadow-xs focus:!ring-offset-2"
       >
-        <template #left="slotProps">
-          <BaseIcon name="KeyIcon" :class="slotProps.class" />
-        </template>
         {{ $t('login.sign_in_with_sso') }}
       </BaseButton>
     </div>
