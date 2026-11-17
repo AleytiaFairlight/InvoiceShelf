@@ -53,15 +53,12 @@
       {{ $t('login.login') }}
     </BaseButton>
 
-    <div v-if="authentikLogin" class="mt-8">
-      <p class="mb-3 text-sm text-gray-500">
-        {{ $t('login.or_signIn_with') }}
-      </p>
+    <div v-if="authentikLogin" class="mt-4">
       <BaseButton tag="a" :href="authentikLogin.url" variant="white">
         <template #left="slotProps">
           <BaseIcon name="KeyIcon" :class="slotProps.class" />
         </template>
-        {{ authentikLogin.label }}
+        {{ $t('login.sign_in_with_sso') }}
       </BaseButton>
       <p v-if="authentikError" class="mt-3 text-sm text-red-600" role="alert">
         {{ authentikError }}
@@ -122,7 +119,7 @@ onMounted(() => {
   const error = authentikErrors[authentikLogin?.error]
 
   if (error) {
-    authentikError.value = t(error, { provider: authentikLogin.label })
+    authentikError.value = t(error)
   }
 
   // The error belongs to the sign-in that just came back, not to later visits

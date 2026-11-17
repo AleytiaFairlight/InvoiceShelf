@@ -1,6 +1,6 @@
 # Sign in with Authentik
 
-InvoiceShelf can let its users sign in with [Authentik](https://goauthentik.io) over OpenID Connect. It adds an **Authentik** button under the login form. The email and password form keeps working next to it, and the customer portal does not change.
+InvoiceShelf can let its users sign in with [Authentik](https://goauthentik.io) over OpenID Connect. It adds a **Sign in with SSO** button under the login form. The email and password form keeps working next to it, and the customer portal does not change.
 
 ## How accounts are matched
 
@@ -34,7 +34,10 @@ In the Authentik admin interface, open **Applications → Applications** and cho
    - Leave the scopes at the defaults. InvoiceShelf asks for `openid`, `profile` and `email`, which Authentik's default mappings provide. Leave the **Subject mode** at its default.
 4. **Bindings:** bind the group (or the users) that may use InvoiceShelf, so that nobody else can even start a sign-in.
 
-Under **System → Settings**, leave **Allow users to change email** off, which is the default. If users could change their own email address in Authentik, someone could set theirs to the address of an InvoiceShelf user who has never signed in with Authentik, and be linked to that user.
+The first sign-in trusts the email address Authentik sends, so make sure nobody can give themselves an address that isn't theirs:
+
+- Under **System → Settings**, leave **Allow users to change email** off, which is the default. If users could change their own email address in Authentik, someone could set theirs to the address of an InvoiceShelf user who has never signed in with Authentik, and be linked to that user.
+- If people can create their own Authentik accounts, through an enrollment flow or a source such as a social login, bind InvoiceShelf to a group those accounts don't join by themselves, or have the enrollment verify the email address.
 
 InvoiceShelf doesn't require the `email_verified` claim. Since 2025.10, Authentik's default email mapping sends `false` for it.
 
@@ -58,7 +61,6 @@ Optional settings:
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `AUTHENTIK_BUTTON_LABEL` | `Authentik` | The text on the button, for example `Company SSO`. |
 | `AUTHENTIK_REDIRECT_URI` | `/auth/authentik/callback` on the host the login page was opened on | A fixed callback URL. It must match the redirect URI in Authentik exactly. |
 
 Run `php artisan migrate` after updating InvoiceShelf. The update adds the `authentik_id` column to `users`.
@@ -71,7 +73,8 @@ InvoiceShelf builds the callback URL from the address the browser used. Behind a
 
 | What you see | Likely cause |
 | --- | --- |
-| No Authentik button | One of the three settings is missing, or the configuration is cached. Run `php artisan config:clear`. |
+| No **Sign in with SSO** button | One of the three settings is missing, or the configuration is cached. Run `php artisan config:clear`. |
 | Authentik shows a redirect URI error | The callback URL InvoiceShelf sent doesn't match Authentik's redirect URI exactly. See *Behind a reverse proxy*. |
-| "Signing in with Authentik did not work" | Authentik refused the code, or InvoiceShelf couldn't reach Authentik. Check `storage/logs/laravel.log` for a wrong client secret or a connection error. The message also appears when the sign-in took too long or was opened in a different browser. |
-| "Your Authentik account does not match a user here" | No user has that email address, or the user is linked to another Authentik account. The log says which. Fix the email address, or run `php artisan authentik:unlink`. |
+| "Signing in with SSO did not work" | Authentik refused the code, or InvoiceShelf couldn't reach Authentik. Check `storage/logs/laravel.log` for a wrong client secret or a connection error. The message also appears when the sign-in took too long or was opened in a different browser. |
+| "Your SSO account does not match a user here" | No user has that email address, or the user is linked to another Authentik account. The log says which. Fix the email address, or run `php artisan authentik:unlink`. |
+| **Sign in with SSO** signs in without asking for a password | You are still signed in to Authentik in that browser. Signing out of InvoiceShelf doesn't sign you out of Authentik, so the button reuses that session until it ends or you sign out of Authentik. |

@@ -10,12 +10,14 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\Sanctum;
 use Laravel\Socialite\Socialite;
 use Laravel\Socialite\Two\User as AuthentikAccount;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\artisan;
 use function Pest\Laravel\get;
+use function Pest\Laravel\putJson;
 
 /** Turns sign-in with Authentik on, pointed at a made-up Authentik. */
 function configureAuthentik(array $settings = []): void
@@ -25,7 +27,6 @@ function configureAuthentik(array $settings = []): void
         'client_id' => 'invoiceshelf',
         'client_secret' => 'client-secret',
         'redirect' => '/auth/authentik/callback',
-        'button_label' => 'Authentik',
         ...$settings,
     ]]);
 }
@@ -76,11 +77,8 @@ test('sign-in with Authentik is off until its base URL, client ID and secret are
 })->with(['base_url', 'client_id', 'client_secret']);
 
 test('the login page offers sign-in with Authentik', function () {
-    configureAuthentik(['button_label' => 'Company SSO']);
-
     expect(authentikOnLoginPage())->toBe([
         'url' => '/auth/authentik/redirect',
-        'label' => 'Company SSO',
         'error' => null,
     ]);
 });
@@ -281,4 +279,29 @@ test('authentik:unlink removes the link, so the next sign-in links by email addr
 
 test('authentik:unlink fails for an unknown email address', function () {
     artisan('authentik:unlink', ['email' => 'nobody@example.com'])->assertFailed();
+});
+
+test('the profile and user APIs cannot link a user to an Authentik account', function () {
+    $admin = seededAdmin();
+    $companyId = $admin->companies()->first()->id;
+    $colleague = User::factory()->create();
+    $colleague->companies()->attach($companyId);
+
+    Sanctum::actingAs($admin, ['*']);
+    $this->withHeaders(['company' => $companyId]);
+
+    putJson('/api/v1/me', [
+        'name' => $admin->name,
+        'email' => $admin->email,
+        'authentik_id' => 'chosen-by-the-caller',
+    ])->assertOk();
+
+    putJson("/api/v1/users/{$colleague->id}", [
+        'name' => $colleague->name,
+        'email' => $colleague->email,
+        'companies' => [['id' => $companyId, 'role' => 'super admin']],
+        'authentik_id' => 'chosen-by-the-caller',
+    ])->assertOk();
+
+    expect(User::query()->whereNotNull('authentik_id')->exists())->toBeFalse();
 });

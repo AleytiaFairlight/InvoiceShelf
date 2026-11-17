@@ -60,7 +60,6 @@ return [
         'client_id' => env('AUTHENTIK_CLIENT_ID'),
         'client_secret' => env('AUTHENTIK_CLIENT_SECRET'),
         'redirect' => env('AUTHENTIK_REDIRECT_URI', '/auth/authentik/callback'),
-        'button_label' => env('AUTHENTIK_BUTTON_LABEL', 'Authentik'),
     ],
 
     'ses' => [

@@ -26,11 +26,11 @@ final class AuthentikLogin
     }
 
     /**
-     * What the login page needs for its button: where the button points, its
-     * label, and why the sign-in that just came back failed, if it did. Null
-     * while sign-in with Authentik is off.
+     * What the login page needs for its "Sign in with SSO" button: where the
+     * button points, and why the sign-in that just came back failed, if it
+     * did. Null while sign-in with Authentik is off.
      *
-     * @return array{url: string, label: string, error: string|null}|null
+     * @return array{url: string, error: string|null}|null
      */
     public static function forLoginPage(): ?array
     {
@@ -40,7 +40,6 @@ final class AuthentikLogin
 
         return [
             'url' => route('authentik.redirect', [], false),
-            'label' => (string) config('services.authentik.button_label'),
             'error' => session(self::ERROR),
         ];
     }
