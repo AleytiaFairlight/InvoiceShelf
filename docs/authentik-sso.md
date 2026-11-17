@@ -1,6 +1,6 @@
 # Sign in with Authentik
 
-InvoiceShelf can let its users sign in with [Authentik](https://goauthentik.io) over OpenID Connect. It adds a **Sign in with SSO** button under the login form. The email and password form keeps working next to it, and the customer portal does not change.
+InvoiceShelf can let its users sign in with [Authentik](https://goauthentik.io) over OpenID Connect. It adds a **Sign in with SSO** button next to the **Login** button. The email and password form keeps working next to it, and the customer portal does not change.
 
 ## How accounts are matched
 

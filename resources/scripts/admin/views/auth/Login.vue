@@ -49,21 +49,27 @@
         </router-link>
       </div>
     </div>
-    <BaseButton :loading="isLoading" type="submit">
-      {{ $t('login.login') }}
-    </BaseButton>
+    <div class="flex flex-wrap items-center gap-3">
+      <BaseButton :loading="isLoading" type="submit">
+        {{ $t('login.login') }}
+      </BaseButton>
 
-    <div v-if="authentikLogin" class="mt-4">
-      <BaseButton tag="a" :href="authentikLogin.url" variant="white">
+      <BaseButton
+        v-if="authentikLogin"
+        tag="a"
+        :href="authentikLogin.url"
+        variant="white"
+      >
         <template #left="slotProps">
           <BaseIcon name="KeyIcon" :class="slotProps.class" />
         </template>
         {{ $t('login.sign_in_with_sso') }}
       </BaseButton>
-      <p v-if="authentikError" class="mt-3 text-sm text-red-600" role="alert">
-        {{ authentikError }}
-      </p>
     </div>
+
+    <p v-if="authentikError" class="mt-3 text-sm text-red-600" role="alert">
+      {{ authentikError }}
+    </p>
   </form>
 </template>
 
